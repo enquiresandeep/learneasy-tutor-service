@@ -5,7 +5,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
 public class UserMgmtServiceApplication {
-
+//some commntgi
 	public static void main(String[] args) {
 		SpringApplication.run(UserMgmtServiceApplication.class, args);
 	}
