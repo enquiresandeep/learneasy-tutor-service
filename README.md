@@ -1,1 +1,1 @@
-# learneasy-student-service
+# learneasy-tutor-service
