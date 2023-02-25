@@ -1,9 +1,8 @@
 package com.learneasy.user.controller;
 
-import com.learneasy.user.domain.Address;
-import com.learneasy.user.domain.ErrorResponse;
-import com.learneasy.user.domain.Student;
-import com.learneasy.user.service.StudentService;
+import com.learneasy.user.infrastructure.dto.AddressDTO;
+import com.learneasy.user.infrastructure.dto.StudentDTO;
+import com.learneasy.user.service.IStudentService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -19,29 +18,39 @@ import java.util.NoSuchElementException;
 public class StudentController {
 
     @Autowired
-    private StudentService _studentService;
+    private final IStudentService _studentService;
 
+    public StudentController(IStudentService studentService){
+        this._studentService = studentService;
+    }
 
 
     @PostMapping("/")
-    public Student saveStudent(@RequestBody Student student) {
-        log.info("StudentService saveStudent "+student.getFirstName());
-        return _studentService.createStudent(student);
+    public ResponseEntity<StudentDTO> saveStudent(@RequestBody StudentDTO student) {
+        log.info("StudentService saveStudent new logs "+student.getFirstName());
+        try{
+            return ResponseEntity.ok( _studentService.createStudent(student));
+        }catch(Exception e){
+            log.error("StudentService error {}", student.getFirstName());
+            StudentDTO errorStudent = new StudentDTO();
+            errorStudent.setErrorMessage("Server Error");
+            return new ResponseEntity<>(errorStudent, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     @PutMapping("/")
-    public ResponseEntity<Student> updateStudent(@RequestBody Student student) {
+    public ResponseEntity<StudentDTO> updateStudent(@RequestBody StudentDTO student) {
         try {
-            Student updatedStudent = _studentService.updateStudent(student);
+            StudentDTO updatedStudent = _studentService.updateStudent(student);
             return ResponseEntity.ok(updatedStudent);
         } catch (NoSuchElementException e) {
             return ResponseEntity.notFound().build();
         } catch (IllegalArgumentException e) {
-            Student errorStudent = new Student();
+            StudentDTO errorStudent = new StudentDTO();
             errorStudent.setErrorMessage(e.getMessage());
             return new ResponseEntity<>(errorStudent, HttpStatus.BAD_REQUEST);
         } catch (Exception e) {
-            Student errorStudent = new Student();
+            StudentDTO errorStudent = new StudentDTO();
             errorStudent.setErrorMessage(e.getMessage());
             return new ResponseEntity<>(errorStudent, HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -49,35 +58,44 @@ public class StudentController {
 
 
     @GetMapping("/{id}")
-    public Student findStudentByStudentId(@PathVariable("id") String studentId){
+    public StudentDTO findStudentByStudentId(@PathVariable("id") String studentId){
         log.info("StudentService findStudentBuId "+studentId);
         return _studentService.findStudentByStudentId(studentId);
     }
 
     @GetMapping("/")
-    public List<Student>  findAll(){
+    public List<StudentDTO>  findAll(){
         log.info("findAll ");
         return _studentService.findAll();
     }
 
-
-
-
     @PostMapping("/createAddress")
-    public Address createAddress(@RequestBody Address address) {
+    public ResponseEntity<AddressDTO> createAddress(@RequestBody AddressDTO address) {
         log.info("StudentService saveStudent "+address.getStreet());
-        return _studentService.createAddress(address);
-    }
-
-    @PutMapping("/updateAddress")
-    public ResponseEntity<Address> updateAddress(@RequestBody Address address) {
         try {
-            Address updatedAddress = _studentService.updateAddress(address);
+            AddressDTO updatedAddress = _studentService.createAddress(address);
             return ResponseEntity.ok(updatedAddress);
         } catch (NoSuchElementException e) {
             return ResponseEntity.notFound().build();
         } catch (IllegalArgumentException e) {
-            Address errorAddress = new Address();
+            AddressDTO errorAddress = new AddressDTO();
+            errorAddress.setErrorMessage(e.getMessage());
+            return new ResponseEntity<>(errorAddress, HttpStatus.BAD_REQUEST);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+
+    }
+
+    @PutMapping("/updateAddress")
+    public ResponseEntity<AddressDTO> updateAddress(@RequestBody AddressDTO address) {
+        try {
+            AddressDTO updatedAddress = _studentService.updateAddress(address);
+            return ResponseEntity.ok(updatedAddress);
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.notFound().build();
+        } catch (IllegalArgumentException e) {
+            AddressDTO errorAddress = new AddressDTO();
             errorAddress.setErrorMessage(e.getMessage());
             return new ResponseEntity<>(errorAddress, HttpStatus.BAD_REQUEST);
         } catch (Exception e) {
@@ -87,7 +105,7 @@ public class StudentController {
 
 
     @GetMapping("/address/{id}")
-    public ResponseEntity<List<Address>> findAddresesByStudentId(@PathVariable("id") String studentId){
+    public ResponseEntity<List<AddressDTO>> findAddresesByStudentId(@PathVariable("id") String studentId){
         log.info("StudentService findStudentBuId "+studentId);
         return ResponseEntity.ok(_studentService.findAddressesByStudentId(studentId));
     }
